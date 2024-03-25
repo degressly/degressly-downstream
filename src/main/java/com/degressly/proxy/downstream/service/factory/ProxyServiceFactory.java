@@ -4,6 +4,7 @@ import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.service.ProxyService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -17,6 +18,9 @@ public class ProxyServiceFactory {
 	@Autowired
 	List<ProxyService> proxyServiceList;
 
+	@Value("${non-idempotent.proxy.enabled:false}")
+	public String useNonIdemptotentProxy;
+
 	private Map<ProxyService.PROXY_SERVICE_TYPE, ProxyService> serviceMap;
 
 	@PostConstruct
@@ -27,7 +31,10 @@ public class ProxyServiceFactory {
 	}
 
 	public ProxyService getProxyService(RequestContext requestContext) {
-		return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.NON_IDEMPOTENT_DOWNSTREAM);
+		if (Boolean.parseBoolean(useNonIdemptotentProxy)) {
+			return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.NON_IDEMPOTENT_DOWNSTREAM);
+		}
+		return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.IDEMPOTENT_DOWNSTREAM);
 	}
 
 }
