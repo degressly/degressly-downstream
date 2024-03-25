@@ -45,4 +45,4 @@ Run degressly-core with:
 
 ## Support
 
-If you would like to reach out for support or feature requests, feel free to drop an email at [me@daniyaalkhan.com](mailto:me@daniyaalkhan.com)
+For queries, feature requests and more details on degressly, please visit [github.com/degressly/degressly-core](https://github.com/degressly/degressly-core).
