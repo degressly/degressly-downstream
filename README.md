@@ -41,3 +41,8 @@ Run degressly-core with:
   * This can be worked around by using an LB that performs SSL termination with a trusted self-signed certificate - left as an exercise for the reader 😉
 * New API Integrations cannot be tested when operating in non-idempotent since cache will never be loaded.
 * `trace-id` headers are a hard requirement from each client
+
+
+## Support
+
+If you would like to reach out for support or feature requests, feel free to drop an email at [me@daniyaalkhan.com](mailto:me@daniyaalkhan.com)
