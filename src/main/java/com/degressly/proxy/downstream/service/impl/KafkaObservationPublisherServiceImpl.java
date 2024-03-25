@@ -1,6 +1,5 @@
 package com.degressly.proxy.downstream.service.impl;
 
-
 import com.degressly.proxy.downstream.dto.Observation;
 import com.degressly.proxy.downstream.kafka.ProducerTemplate;
 import com.degressly.proxy.downstream.service.ObservationPublisherService;
@@ -35,7 +34,7 @@ public class KafkaObservationPublisherServiceImpl implements ObservationPublishe
 		try {
 			Map<String, Object> map = objectMapper.convertValue(result, new TypeReference<>() {
 			});
-//			parseBodyToJson(map);
+			// parseBodyToJson(map);
 			String payload = objectMapper.writeValueAsString(map);
 			logger.info("Sending payload {}", payload);
 			kafkaTemplate.sendMessage(payload);

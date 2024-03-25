@@ -14,13 +14,13 @@ import org.springframework.util.MultiValueMap;
 @NoArgsConstructor
 public class RequestContext {
 
-	 HttpServletRequest request;
+	HttpServletRequest request;
 
-	 MultiValueMap<String, String> headers;
+	MultiValueMap<String, String> headers;
 
 	MultiValueMap<String, String> params;
 
 	@Nullable
-	 String body;
+	String body;
 
 }

@@ -62,10 +62,10 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 			.getOrDefault(requestContext.getRequest().getRequestURI(), new RequestCacheObject());
 
 		var downstreamRequest = DownstreamRequest.builder()
-				.headers(new HashMap<>(requestContext.getHeaders()))
-				.params(requestContext.getParams())
-				.body(requestContext.getBody())
-				.build();
+			.headers(new HashMap<>(requestContext.getHeaders()))
+			.params(requestContext.getParams())
+			.body(requestContext.getBody())
+			.build();
 
 		switch (caller.get()) {
 			case PRIMARY:
@@ -109,7 +109,14 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 	}
 
 	@Override
-	public void fetch() {
+	public Optional<RequestCacheObject> fetch(String url) {
+		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+
+		if (Objects.isNull(traceRequestsMap)) {
+			return Optional.empty();
+		}
+
+		return Optional.ofNullable(traceRequestsMap.get(url));
 	}
 
 }

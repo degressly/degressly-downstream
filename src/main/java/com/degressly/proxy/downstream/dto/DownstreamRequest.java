@@ -15,11 +15,11 @@ import java.util.Map;
 @NoArgsConstructor
 public class DownstreamRequest {
 
-    Map<String, List<String>> headers;
+	Map<String, List<String>> headers;
 
-    Map<String, List<String>> params;
+	Map<String, List<String>> params;
 
-    @Nullable
-    String body;
+	@Nullable
+	String body;
 
 }
