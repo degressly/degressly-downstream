@@ -1,7 +1,7 @@
 package com.degressly.proxy.downstream.service.impl;
 
+import com.degressly.proxy.downstream.dto.DownstreamRequest;
 import com.degressly.proxy.downstream.dto.Observation;
-import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.service.ObservationPublisherService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,9 +14,9 @@ public class LoggerObservationPublisherServiceImpl implements ObservationPublish
 
 	@Override
 	public void publish(Observation observation) {
-		RequestContext primaryResult = observation.getPrimaryRequest();
-		RequestContext secondaryResult = observation.getSecondaryRequest();
-		RequestContext candidateResult = observation.getCandidateRequest();
+		DownstreamRequest primaryResult = observation.getPrimaryRequest();
+		DownstreamRequest secondaryResult = observation.getSecondaryRequest();
+		DownstreamRequest candidateResult = observation.getCandidateRequest();
 		logger.info("Primary Http Response: {}", primaryResult);
 		logger.info("Secondary Http Response: {}", secondaryResult);
 		logger.info("Candidate Http Response: {}", candidateResult);

@@ -1,10 +1,12 @@
 package com.degressly.proxy.downstream.service.impl;
 
 import com.degressly.proxy.downstream.Constants;
+import com.degressly.proxy.downstream.dto.DownstreamRequest;
 import com.degressly.proxy.downstream.dto.RequestCacheObject;
 import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.helper.RequestHelper;
 import com.degressly.proxy.downstream.service.RequestCacheService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
@@ -35,6 +37,8 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 	private final ExecutorService observationPublisherExecutorService = Executors.newCachedThreadPool();
 
+	private static final ObjectMapper objectMapper = new ObjectMapper();
+
 	@Autowired
 	RequestHelper requestHelper;
 
@@ -57,15 +61,21 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 		RequestCacheObject requestsForCurrentUri = traceRequestsMap
 			.getOrDefault(requestContext.getRequest().getRequestURI(), new RequestCacheObject());
 
+		var downstreamRequest = DownstreamRequest.builder()
+				.headers(new HashMap<>(requestContext.getHeaders()))
+				.params(requestContext.getParams())
+				.body(requestContext.getBody())
+				.build();
+
 		switch (caller.get()) {
 			case PRIMARY:
-				requestsForCurrentUri.setPrimaryRequest(requestContext);
+				requestsForCurrentUri.setPrimaryRequest(downstreamRequest);
 				break;
 			case SECONDARY:
-				requestsForCurrentUri.setSecondaryRequest(requestContext);
+				requestsForCurrentUri.setSecondaryRequest(downstreamRequest);
 				break;
 			case CANDIDATE:
-				requestsForCurrentUri.setCandidateRequest(requestContext);
+				requestsForCurrentUri.setCandidateRequest(downstreamRequest);
 				break;
 		}
 

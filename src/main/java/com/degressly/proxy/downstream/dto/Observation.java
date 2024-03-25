@@ -17,10 +17,10 @@ public class Observation {
 
 	DownstreamResult candidateResult;
 
-	RequestContext primaryRequest;
+	DownstreamRequest primaryRequest;
 
-	RequestContext secondaryRequest;
+	DownstreamRequest secondaryRequest;
 
-	RequestContext candidateRequest;
+	DownstreamRequest candidateRequest;
 
 }

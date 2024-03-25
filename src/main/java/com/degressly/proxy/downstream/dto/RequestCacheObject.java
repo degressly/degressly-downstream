@@ -6,11 +6,11 @@ import org.springframework.http.ResponseEntity;
 @Data
 public class RequestCacheObject {
 
-	RequestContext primaryRequest;
+	DownstreamRequest primaryRequest;
 
-	RequestContext secondaryRequest;
+	DownstreamRequest secondaryRequest;
 
-	RequestContext candidateRequest;
+	DownstreamRequest candidateRequest;
 
 	ResponseEntity response; // To be used for non-idempotent requests
 
