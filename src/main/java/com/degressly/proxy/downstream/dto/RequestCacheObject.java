@@ -14,4 +14,6 @@ public class RequestCacheObject {
 
 	ResponseEntity response; // To be used for non-idempotent requests
 
+	boolean observationPublished = false;
+
 }

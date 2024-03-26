@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -51,15 +52,22 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 			return new RequestCacheObject();
 		}
 
-		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+		RequestCacheObject requestsForCurrentUri;
+		synchronized (this) {
+			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+			if (Objects.isNull(traceRequestsMap)) {
+				traceRequestsMap = new ConcurrentHashMap<>();
+				cache.put(MDC.get(TRACE_ID), traceRequestsMap);
+			}
 
-		if (Objects.isNull(traceRequestsMap)) {
-			traceRequestsMap = new HashMap<>();
-			cache.put(MDC.get(TRACE_ID), traceRequestsMap);
+			requestsForCurrentUri = traceRequestsMap
+					.get(requestContext.getRequest().getRequestURI());
+			if (Objects.isNull(requestsForCurrentUri)) {
+				requestsForCurrentUri = new RequestCacheObject();
+				traceRequestsMap.put(requestContext.getRequest().getRequestURI(), requestsForCurrentUri);
+			}
 		}
 
-		RequestCacheObject requestsForCurrentUri = traceRequestsMap
-			.getOrDefault(requestContext.getRequest().getRequestURI(), new RequestCacheObject());
 
 		var downstreamRequest = DownstreamRequest.builder()
 			.headers(new HashMap<>(requestContext.getHeaders()))
@@ -79,33 +87,38 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 				break;
 		}
 
-		traceRequestsMap.put(requestContext.getRequest().getRequestURI(), requestsForCurrentUri);
-
 		return requestsForCurrentUri;
 
 	}
 
 	@Override
 	public RequestCacheObject storeResponse(RequestContext requestContext, ResponseEntity response) {
-		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
 		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext.getRequest());
 
-		if (Objects.isNull(traceRequestsMap)) {
-			traceRequestsMap = new HashMap<>();
-			cache.put(MDC.get(TRACE_ID), traceRequestsMap);
-		}
 
-		RequestCacheObject cacheForCurrentUri = traceRequestsMap
-			.getOrDefault(requestContext.getRequest().getRequestURI(), new RequestCacheObject());
+		RequestCacheObject requestsForCurrentUri;
+		synchronized (this) {
+			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+			if (Objects.isNull(traceRequestsMap)) {
+				traceRequestsMap = new ConcurrentHashMap<>();
+				cache.put(MDC.get(TRACE_ID), traceRequestsMap);
+			}
+
+			requestsForCurrentUri = traceRequestsMap
+					.get(requestContext.getRequest().getRequestURI());
+			if (Objects.isNull(requestsForCurrentUri)) {
+				requestsForCurrentUri = new RequestCacheObject();
+				traceRequestsMap.put(requestContext.getRequest().getRequestURI(), requestsForCurrentUri);
+			}
+		}
 
 		if (caller.isEmpty() || !caller.get().equals(Constants.CALLER.PRIMARY)) {
-			return cacheForCurrentUri;
+			return requestsForCurrentUri;
 		}
 
-		cacheForCurrentUri.setResponse(response);
-		traceRequestsMap.put(requestContext.getRequest().getRequestURI(), cacheForCurrentUri);
+		requestsForCurrentUri.setResponse(response);
 
-		return cacheForCurrentUri;
+		return requestsForCurrentUri;
 	}
 
 	@Override
