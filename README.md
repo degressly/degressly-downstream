@@ -40,7 +40,8 @@ Run degressly-core with:
 * Since degressly-downstream works as an HTTP Proxy, HTTPS S2S calls are not supported. 
   * This can be worked around by using an LB that performs SSL termination with a trusted self-signed certificate - left as an exercise for the reader 😉
 * New API Integrations cannot be tested when operating in non-idempotent since cache will never be loaded.
-* `trace-id` headers are a hard requirement from each client
+* `trace-id` headers are a hard requirement from each client.
+* Lots of cache interface code is synchronized, causing performance impact.
 
 
 ## Support
