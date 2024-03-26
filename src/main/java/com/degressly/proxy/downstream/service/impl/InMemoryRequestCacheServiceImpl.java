@@ -60,14 +60,12 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 				cache.put(MDC.get(TRACE_ID), traceRequestsMap);
 			}
 
-			requestsForCurrentUri = traceRequestsMap
-					.get(requestContext.getRequest().getRequestURI());
+			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURI());
 			if (Objects.isNull(requestsForCurrentUri)) {
 				requestsForCurrentUri = new RequestCacheObject();
 				traceRequestsMap.put(requestContext.getRequest().getRequestURI(), requestsForCurrentUri);
 			}
 		}
-
 
 		var downstreamRequest = DownstreamRequest.builder()
 			.headers(new HashMap<>(requestContext.getHeaders()))
@@ -95,7 +93,6 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 	public RequestCacheObject storeResponse(RequestContext requestContext, ResponseEntity response) {
 		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext.getRequest());
 
-
 		RequestCacheObject requestsForCurrentUri;
 		synchronized (this) {
 			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
@@ -104,8 +101,7 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 				cache.put(MDC.get(TRACE_ID), traceRequestsMap);
 			}
 
-			requestsForCurrentUri = traceRequestsMap
-					.get(requestContext.getRequest().getRequestURI());
+			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURI());
 			if (Objects.isNull(requestsForCurrentUri)) {
 				requestsForCurrentUri = new RequestCacheObject();
 				traceRequestsMap.put(requestContext.getRequest().getRequestURI(), requestsForCurrentUri);

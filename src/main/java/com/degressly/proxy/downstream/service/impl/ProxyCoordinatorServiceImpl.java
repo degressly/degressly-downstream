@@ -61,7 +61,7 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		String traceId = MDC.get(TRACE_ID);
 
 		synchronized (this) {
-			if(updatedRequestCacheObject.isObservationPublished()) {
+			if (updatedRequestCacheObject.isObservationPublished()) {
 				return;
 			}
 			updatedRequestCacheObject.setObservationPublished(true);
