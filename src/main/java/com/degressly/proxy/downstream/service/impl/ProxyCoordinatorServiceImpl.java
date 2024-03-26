@@ -74,7 +74,7 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 
 				var observation = Observation.builder()
 					.requestUrl(requestUrl)
-					.traceId(traceId)
+					.traceId(traceId).observationType("REQUEST")
 					.primaryRequest(updatedRequestCacheObject.getPrimaryRequest())
 					.candidateRequest(updatedRequestCacheObject.getCandidateRequest())
 					.secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())

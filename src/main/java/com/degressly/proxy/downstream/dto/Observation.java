@@ -11,6 +11,8 @@ public class Observation {
 
 	String requestUrl;
 
+	String observationType = "REQUEST";
+
 	DownstreamResult primaryResult;
 
 	DownstreamResult secondaryResult;
@@ -22,5 +24,6 @@ public class Observation {
 	DownstreamRequest secondaryRequest;
 
 	DownstreamRequest candidateRequest;
+
 
 }
