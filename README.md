@@ -22,7 +22,13 @@ Run degressly-core with:
 | non-idempotent.proxy.enabled       | false(default)/true | Proxy requests in non-idempotent downstream mode when set to true                                         |
 | non-idempotent.wait.timeout        | 1000000(default)    | Time in ms to wait when a request arrives from secondary or candidate before primary                      |
 | non-idempotent.wait.retry-interval | 100(default)        | Interval for performing cache lookups when waiting for response of primary request in non-idempotent mode |
+| primary.hostname                   | 10.0.0.1            | Hostname of primary instance, used to infer the origin of an http request.                                |
+| secondary.hostname                 | 10.0.0.2            | Hostname of secondary instance, used to infer the origin of an http request.                              |
+| candidate.hostname                 | 10.0.0.3            | Hostname of candidate instance, used to infer the origin of an http request.                              |
 
+#### Hostname inference
+Hostname inference is necessary for determining the source of a request for recording an observation and for caching in case of non-idempotent downstream. 
+It can be done by either providing the `primary.hostname`, `secondary.hostname` and `candidate.hostname` values or by adding a `x-degressly-caller` header with the values `PRIMARY`, `SECONDARY` or `CANDIDATE`.
 
 ## Modes:
 * Idempotent downstream mode:
@@ -36,12 +42,15 @@ Run degressly-core with:
 
 
 ## Limitations
+Some work in progress limitations are listed below:
 
 * Since degressly-downstream works as an HTTP Proxy, HTTPS S2S calls are not supported. 
   * This can be worked around by using an LB that performs SSL termination with a trusted self-signed certificate - left as an exercise for the reader 😉
 * New API Integrations cannot be tested when operating in non-idempotent since cache will never be loaded.
 * `trace-id` headers are a hard requirement from each client.
+#### Good first issues for new contributors:
 * Lots of cache interface code is synchronized, causing performance impact.
+* Data is not sent if one of the downstreams does not call a particular API.
 
 
 ## Support
