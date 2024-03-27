@@ -51,7 +51,8 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, response);
 		logger.info("updatedRequestCacheObject: {}", updatedRequestCacheObject);
 
-		publishObservationIfAllDataIsAvailable(requestContext.getRequest().getRequestURI(), updatedRequestCacheObject);
+		publishObservationIfAllDataIsAvailable(requestContext.getRequest().getRequestURL().toString(),
+				updatedRequestCacheObject);
 
 		return response;
 	}
@@ -74,7 +75,8 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 
 				var observation = Observation.builder()
 					.requestUrl(requestUrl)
-					.traceId(traceId).observationType("REQUEST")
+					.traceId(traceId)
+					.observationType("REQUEST")
 					.primaryRequest(updatedRequestCacheObject.getPrimaryRequest())
 					.candidateRequest(updatedRequestCacheObject.getCandidateRequest())
 					.secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())

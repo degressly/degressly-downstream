@@ -66,7 +66,7 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 
 	private Optional<RequestCacheObject> handleRetries(RequestContext requestContext) {
 		Optional<RequestCacheObject> requestCacheObject = requestCacheService
-			.fetch(requestContext.getRequest().getRequestURI());
+			.fetch(requestContext.getRequest().getRequestURL().toString());
 		long timeElapsed = 0;
 
 		while (requestCacheObject.isEmpty() || Objects.isNull(requestCacheObject.get().getResponse())) {
@@ -78,7 +78,7 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 				Thread.sleep(nonIdempotentWaitRetryInterval);
 				timeElapsed += nonIdempotentWaitRetryInterval;
 
-				requestCacheObject = requestCacheService.fetch(requestContext.getRequest().getRequestURI());
+				requestCacheObject = requestCacheService.fetch(requestContext.getRequest().getRequestURL().toString());
 
 			}
 			catch (InterruptedException e) {
@@ -90,7 +90,7 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 		return requestCacheObject;
 	}
 
-	private static ResponseEntity performDownstreamCall(RequestContext requestContext) {
+	private ResponseEntity performDownstreamCall(RequestContext requestContext) {
 		HttpServletRequest request = requestContext.getRequest();
 		String proto = "http";
 
@@ -99,8 +99,12 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 		}
 		String host = proto + "://" + request.getHeader("host");
 
-		return DownstreamClient.getResponse(host, request, requestContext.getHeaders(), requestContext.getParams(),
-				requestContext.getBody());
+		ResponseEntity response = DownstreamClient.getResponse(host, request, requestContext.getHeaders(),
+				requestContext.getParams(), requestContext.getBody());
+
+		requestCacheService.storeResponse(requestContext, response);
+
+		return response;
 	}
 
 	@Override

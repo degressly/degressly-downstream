@@ -25,5 +25,4 @@ public class Observation {
 
 	DownstreamRequest candidateRequest;
 
-
 }
