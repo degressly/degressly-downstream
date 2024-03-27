@@ -51,6 +51,9 @@ Some work in progress limitations are listed below:
 #### Good first issues for new contributors:
 * Lots of cache interface code is synchronized, causing performance impact.
 * Data is not sent if one of the downstreams does not call a particular API.
+* There should be configurable fallbacks for non-idempotent downstream proxy. 
+  * A flag should allow a request to be served from actual downstream instead of cache after x seconds of waiting.
+  * A header in the request should be able to override config and force a request to be fetched from downstream even if non-idempotent proxy is enabled.
 
 
 ## Support
