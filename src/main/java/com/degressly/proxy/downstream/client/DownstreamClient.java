@@ -4,23 +4,22 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.experimental.UtilityClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.lang.Nullable;
+import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @UtilityClass
 public class DownstreamClient {
 
 	private final Logger logger = LoggerFactory.getLogger(DownstreamClient.class);
+
+	private static final Set<String> headersToSkip = new HashSet<>(Arrays.asList("transfer-encoding"));
 
 	public static ResponseEntity getResponse(String host, HttpServletRequest httpServletRequest,
 			MultiValueMap<String, String> headers, MultiValueMap<String, String> params, String body) {
@@ -32,10 +31,12 @@ public class DownstreamClient {
 		var finalUrl = getFinalUrl(host, httpServletRequest, params, queryParams);
 
 		HttpEntity<String> response;
+		MultiValueMap<String, String> newHeaders;
 
 		try {
 			response = restTemplate.exchange(finalUrl, HttpMethod.valueOf(httpServletRequest.getMethod()), httpEntity,
 					String.class, queryParams);
+			newHeaders = filterHeaders(response.getHeaders());
 
 			logger.info("Response for for url {}: Status: {}, Headers: {}, Body: {}", finalUrl, "200",
 					response.getHeaders(), response.getBody());
@@ -44,12 +45,27 @@ public class DownstreamClient {
 		catch (HttpClientErrorException e) {
 			logger.info("Response for for url {}: Status: {} Headers: {}, Body: {}", finalUrl, e.getStatusCode(),
 					e.getResponseHeaders(), e.getResponseBodyAsString());
-			return new ResponseEntity(e.getResponseBodyAsString(), e.getResponseHeaders(),
+			newHeaders = filterHeaders(e.getResponseHeaders());
+			return new ResponseEntity(e.getResponseBodyAsString(), newHeaders,
 					HttpStatus.valueOf(e.getStatusCode().value()));
 		}
 
-		return new ResponseEntity(response.getBody(), response.getHeaders(), HttpStatus.OK);
+		return new ResponseEntity(response.getBody(), newHeaders, HttpStatus.OK);
 
+	}
+
+	private static MultiValueMap<String, String> filterHeaders(@Nullable HttpHeaders headers) {
+		if (Objects.isNull(headers)) {
+			return new LinkedMultiValueMap<>();
+		}
+		MultiValueMap<String, String> headerMap = new LinkedMultiValueMap<>();
+		headers.forEach((key, value) -> {
+			if (!headersToSkip.contains(key.toLowerCase())) {
+				headerMap.put(key, value);
+			}
+		});
+
+		return headerMap;
 	}
 
 	private static String getFinalUrl(String host, HttpServletRequest httpServletRequest,

@@ -4,6 +4,7 @@ import com.degressly.proxy.downstream.Constants;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -12,25 +13,27 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @Component
 public class RequestHelper {
 
 	@Value("${primary.hostname:#{null}}")
-	private Optional<String> PRIMARY_HOSTNAME;
+	private String PRIMARY_HOSTNAME;
 
 	@Value("${secondary.hostname:#{null}}")
-	private Optional<String> SECONDARY_HOSTNAME;
+	private String SECONDARY_HOSTNAME;
 
 	@Value("${candidate.hostname:#{null}}")
-	private Optional<String> CANDIDATE_HOSTNAME;
+	private String CANDIDATE_HOSTNAME;
 
 	private Map<String, Constants.CALLER> hostnameMap = Collections.emptyMap();
 
 	@PostConstruct
 	public void init() {
-		if (PRIMARY_HOSTNAME.isPresent() && SECONDARY_HOSTNAME.isPresent() && CANDIDATE_HOSTNAME.isPresent()) {
-			this.hostnameMap = Map.of(PRIMARY_HOSTNAME.get(), Constants.CALLER.PRIMARY, SECONDARY_HOSTNAME.get(),
-					Constants.CALLER.SECONDARY, CANDIDATE_HOSTNAME.get(), Constants.CALLER.CANDIDATE);
+		if (StringUtils.isNotBlank(PRIMARY_HOSTNAME) && StringUtils.isNotBlank(SECONDARY_HOSTNAME)
+				&& StringUtils.isNotBlank(CANDIDATE_HOSTNAME)) {
+			this.hostnameMap = Map.of(PRIMARY_HOSTNAME, Constants.CALLER.PRIMARY, SECONDARY_HOSTNAME,
+					Constants.CALLER.SECONDARY, CANDIDATE_HOSTNAME, Constants.CALLER.CANDIDATE);
 		}
 	}
 
