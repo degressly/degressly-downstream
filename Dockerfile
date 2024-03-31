@@ -20,6 +20,7 @@ ENV diff_publisher_bootstrap-servers=${diff_publisher_bootstrap_servers}
 ENV diff_publisher_topic-name=${diff_publisher_topic_name}
 ENV non-idempotent_proxy_enabled=${non_idempotent_proxy_enabled}
 ENV non-idempotent_wait_timeout=${non_idempotent_wait_timeout}
+ENV non_idempotent_wait_retry_interval=${non_idempotent_wait_retry_interval}
 ENV primary_hostname=${primary_hostname}
 ENV secondary_hostname=${secondary_hostname}
 ENV candidate_hostname=${candidate_hostname}

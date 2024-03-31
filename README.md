@@ -15,16 +15,16 @@ Run degressly-core with:
 
 ### Config flags (VM options)
 
-| Flag                               | Example             | Description                                                                                               |
-|------------------------------------|---------------------|-----------------------------------------------------------------------------------------------------------|
-| diff.publisher.bootstrap-servers   | localhost:9092      | Address of kafka bootstrap servers for integration with degressly-comparator                              |
-| diff.publisher.topic-name          | diff_stream         | Kafka topic name for integration with degressly-comparator                                                |
-| non-idempotent.proxy.enabled       | false(default)/true | Proxy requests in non-idempotent downstream mode when set to true                                         |
-| non-idempotent.wait.timeout        | 1000000(default)    | Time in ms to wait when a request arrives from secondary or candidate before primary                      |
-| non-idempotent.wait.retry-interval | 100(default)        | Interval for performing cache lookups when waiting for response of primary request in non-idempotent mode |
-| primary.hostname                   | 10.0.0.1            | Hostname of primary instance, used to infer the origin of an http request.                                |
-| secondary.hostname                 | 10.0.0.2            | Hostname of secondary instance, used to infer the origin of an http request.                              |
-| candidate.hostname                 | 10.0.0.3            | Hostname of candidate instance, used to infer the origin of an http request.                              |
+| VM Options (When running jar)      | Environment Variables (When using Docker) | Example                     | Description                                                                                               |
+|------------------------------------|-------------------------------------------|-----------------------------|-----------------------------------------------------------------------------------------------------------|
+| diff.publisher.bootstrap-servers   | diff_publisher_bootstrap-servers          | localhost:9092 / kafka:9092 | Address of kafka bootstrap servers for integration with degressly-comparator                              |
+| diff.publisher.topic-name          | diff_publisher_topic-name                 | diff_stream                 | Kafka topic name for integration with degressly-comparator                                                |
+| non-idempotent.proxy.enabled       | non-idempotent_proxy_enabled              | false(default)/true         | Proxy requests in non-idempotent downstream mode when set to true                                         |
+| non-idempotent.wait.timeout        | non-idempotent_wait_timeout               | 1000000(default)            | Time in ms to wait when a request arrives from secondary or candidate before primary                      |
+| non-idempotent.wait.retry-interval | non_idempotent_wait_retry_interval        | 100(default)                | Interval for performing cache lookups when waiting for response of primary request in non-idempotent mode |
+| primary.hostname                   | primary_hostname                          | 10.0.0.1                    | Hostname of primary instance, used to infer the origin of an http request.                                |
+| secondary.hostname                 | secondary_hostname                        | 10.0.0.2                    | Hostname of secondary instance, used to infer the origin of an http request.                              |
+| candidate.hostname                 | candidate_hostname                        | 10.0.0.3                    | Hostname of candidate instance, used to infer the origin of an http request.                              |
 
 #### Hostname inference
 Hostname inference is necessary for determining the source of a request for recording an observation and for caching in case of non-idempotent downstream. 
