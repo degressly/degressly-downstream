@@ -66,7 +66,7 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 
 	private Optional<RequestCacheObject> handleRetries(RequestContext requestContext) {
 		Optional<RequestCacheObject> requestCacheObject = requestCacheService
-			.fetch(requestContext.getRequest().getRequestURL().toString());
+			.fetch(requestContext.getRequest().getRequestURL().toString(), requestContext.getTraceId());
 		long timeElapsed = 0;
 
 		while (requestCacheObject.isEmpty() || Objects.isNull(requestCacheObject.get().getResponse())) {
@@ -78,7 +78,8 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 				Thread.sleep(nonIdempotentWaitRetryInterval);
 				timeElapsed += nonIdempotentWaitRetryInterval;
 
-				requestCacheObject = requestCacheService.fetch(requestContext.getRequest().getRequestURL().toString());
+				requestCacheObject = requestCacheService.fetch(requestContext.getRequest().getRequestURL().toString(),
+						requestContext.getTraceId());
 
 			}
 			catch (InterruptedException e) {

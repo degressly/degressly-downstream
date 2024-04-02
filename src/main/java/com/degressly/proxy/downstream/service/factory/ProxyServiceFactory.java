@@ -31,7 +31,7 @@ public class ProxyServiceFactory {
 	}
 
 	public ProxyService getProxyService(RequestContext requestContext) {
-		if (Boolean.parseBoolean(useNonIdemptotentProxy)) {
+		if (requestContext.isIdempotent()) {
 			return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.NON_IDEMPOTENT_DOWNSTREAM);
 		}
 		return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.IDEMPOTENT_DOWNSTREAM);

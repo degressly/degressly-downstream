@@ -23,4 +23,10 @@ public class RequestContext {
 	@Nullable
 	String body;
 
+	String traceId;
+
+	String idempotencyKey;
+
+	boolean isIdempotent;
+
 }

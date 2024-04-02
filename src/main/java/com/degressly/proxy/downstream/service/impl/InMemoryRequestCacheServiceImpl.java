@@ -11,7 +11,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -24,8 +23,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-
-import static com.degressly.proxy.downstream.Constants.TRACE_ID;
 
 @Service
 public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
@@ -54,10 +51,10 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 		RequestCacheObject requestsForCurrentUri;
 		synchronized (this) {
-			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(requestContext.getTraceId());
 			if (Objects.isNull(traceRequestsMap)) {
 				traceRequestsMap = new ConcurrentHashMap<>();
-				cache.put(MDC.get(TRACE_ID), traceRequestsMap);
+				cache.put(requestContext.getTraceId(), traceRequestsMap);
 			}
 
 			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURL().toString());
@@ -95,10 +92,10 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 		RequestCacheObject requestsForCurrentUri;
 		synchronized (this) {
-			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(requestContext.getTraceId());
 			if (Objects.isNull(traceRequestsMap)) {
 				traceRequestsMap = new ConcurrentHashMap<>();
-				cache.put(MDC.get(TRACE_ID), traceRequestsMap);
+				cache.put(requestContext.getTraceId(), traceRequestsMap);
 			}
 
 			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURL().toString());
@@ -118,8 +115,8 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 	}
 
 	@Override
-	public Optional<RequestCacheObject> fetch(String url) {
-		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(MDC.get(TRACE_ID));
+	public Optional<RequestCacheObject> fetch(String url, String traceId) {
+		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(traceId);
 
 		if (Objects.isNull(traceRequestsMap)) {
 			return Optional.empty();
