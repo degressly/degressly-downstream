@@ -45,7 +45,7 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 	@Override
 	public RequestCacheObject storeRequest(RequestContext requestContext) {
-		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext.getRequest());
+		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext);
 
 		if (caller.isEmpty()) {
 			logger.warn("Could not resolve caller, will not store data in cache");
@@ -91,7 +91,7 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 	@Override
 	public RequestCacheObject storeResponse(RequestContext requestContext, ResponseEntity response) {
-		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext.getRequest());
+		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext);
 
 		RequestCacheObject requestsForCurrentUri;
 		synchronized (this) {

@@ -1,9 +1,9 @@
 package com.degressly.proxy.downstream.helper;
 
 import com.degressly.proxy.downstream.Constants;
+import com.degressly.proxy.downstream.dto.RequestContext;
 import io.micrometer.common.util.StringUtils;
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -37,18 +37,18 @@ public class RequestHelper {
 		}
 	}
 
-	public Optional<Constants.CALLER> getCaller(HttpServletRequest request) {
+	public Optional<Constants.CALLER> getCaller(RequestContext requestContext) {
 		// First priority is given to hostname match, then to headers
 
 		if (!CollectionUtils.isEmpty(hostnameMap)) {
-			if (hostnameMap.containsKey(request.getRemoteHost())) {
-				return Optional.of(hostnameMap.get(request.getRemoteHost()));
+			if (hostnameMap.containsKey(requestContext.getRequest().getRemoteHost())) {
+				return Optional.of(hostnameMap.get(requestContext.getRequest().getRemoteHost()));
 			}
 		}
 
-		if (StringUtils.isNotBlank(request.getHeader(Constants.CALLER_ID))) {
+		if (StringUtils.isNotBlank(requestContext.getHeaders().getFirst(Constants.CALLER_ID))) {
 			try {
-				return Optional.of(Constants.CALLER.valueOf(request.getHeader(Constants.CALLER_ID)));
+				return Optional.of(Constants.CALLER.valueOf(requestContext.getHeaders().getFirst(Constants.CALLER_ID)));
 			}
 			catch (Exception e) {
 				// Do nothing

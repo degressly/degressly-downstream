@@ -38,7 +38,7 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 
 	@Override
 	public ResponseEntity fetch(RequestContext requestContext) {
-		Optional<Constants.CALLER> callerOptional = requestHelper.getCaller(requestContext.getRequest());
+		Optional<Constants.CALLER> callerOptional = requestHelper.getCaller(requestContext);
 
 		if (callerOptional.isEmpty()) {
 			logger.error("Could not resolve caller details, failing.");
@@ -94,10 +94,10 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 		HttpServletRequest request = requestContext.getRequest();
 		String proto = "http";
 
-		if (StringUtils.isNotBlank(request.getHeader("x-forwarded-proto"))) {
-			proto = request.getHeader("x-forwarded-proto");
+		if (StringUtils.isNotBlank(requestContext.getHeaders().getFirst("x-forwarded-proto"))) {
+			proto = requestContext.getHeaders().getFirst("x-forwarded-proto");
 		}
-		String host = proto + "://" + request.getHeader("host");
+		String host = proto + "://" + requestContext.getHeaders().getFirst("host");
 
 		ResponseEntity response = DownstreamClient.getResponse(host, request, requestContext.getHeaders(),
 				requestContext.getParams(), requestContext.getBody());
