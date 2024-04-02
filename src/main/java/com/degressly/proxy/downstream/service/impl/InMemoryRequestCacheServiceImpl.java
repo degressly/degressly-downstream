@@ -57,10 +57,10 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 				cache.put(requestContext.getTraceId(), traceRequestsMap);
 			}
 
-			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURL().toString());
+			requestsForCurrentUri = traceRequestsMap.get(requestContext.getIdempotencyKey());
 			if (Objects.isNull(requestsForCurrentUri)) {
 				requestsForCurrentUri = new RequestCacheObject();
-				traceRequestsMap.put(requestContext.getRequest().getRequestURL().toString(), requestsForCurrentUri);
+				traceRequestsMap.put(requestContext.getIdempotencyKey(), requestsForCurrentUri);
 			}
 		}
 
@@ -92,16 +92,16 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 		RequestCacheObject requestsForCurrentUri;
 		synchronized (this) {
-			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(requestContext.getIdempotencyKey());
+			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(requestContext.getTraceId());
 			if (Objects.isNull(traceRequestsMap)) {
 				traceRequestsMap = new ConcurrentHashMap<>();
-				cache.put(requestContext.getIdempotencyKey(), traceRequestsMap);
+				cache.put(requestContext.getTraceId(), traceRequestsMap);
 			}
 
-			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURL().toString());
+			requestsForCurrentUri = traceRequestsMap.get(requestContext.getIdempotencyKey());
 			if (Objects.isNull(requestsForCurrentUri)) {
 				requestsForCurrentUri = new RequestCacheObject();
-				traceRequestsMap.put(requestContext.getRequest().getRequestURL().toString(), requestsForCurrentUri);
+				traceRequestsMap.put(requestContext.getIdempotencyKey(), requestsForCurrentUri);
 			}
 		}
 
@@ -115,14 +115,14 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 	}
 
 	@Override
-	public Optional<RequestCacheObject> fetch(String url, String idempotencyKey) {
-		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(idempotencyKey);
+	public Optional<RequestCacheObject> fetch(String traceId, String idempotencyKey) {
+		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(traceId);
 
 		if (Objects.isNull(traceRequestsMap)) {
 			return Optional.empty();
 		}
 
-		return Optional.ofNullable(traceRequestsMap.get(url));
+		return Optional.ofNullable(traceRequestsMap.get(idempotencyKey));
 	}
 
 }

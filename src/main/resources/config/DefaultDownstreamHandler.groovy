@@ -6,7 +6,7 @@ import org.springframework.util.MultiValueMap
 
 class DownstreamHandler implements com.degressly.proxy.downstream.handler.DownstreamHandler {
 
-    Set<String> idempotentURIs = Collections.singleton("/v1/auth");
+    Set<String> idempotentURIs = Set.of("/sample-idempotent", );
 
     @Override
     Optional<Boolean> isIdempotent(RequestContext requestContext) {
@@ -28,6 +28,7 @@ class DownstreamHandler implements com.degressly.proxy.downstream.handler.Downst
             bodyJson = jsonSlurper.parseText(requestContext.getBody())
         } catch(Exception ignored) {
             // Do nothing
+            bodyJson = null
         }
 
         def optional

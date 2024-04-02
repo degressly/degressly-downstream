@@ -12,6 +12,6 @@ public interface RequestCacheService {
 
 	RequestCacheObject storeResponse(RequestContext requestContext, ResponseEntity response);
 
-	Optional<RequestCacheObject> fetch(String url, String traceId);
+	Optional<RequestCacheObject> fetch(String traceId, String idempotencyKey);
 
 }

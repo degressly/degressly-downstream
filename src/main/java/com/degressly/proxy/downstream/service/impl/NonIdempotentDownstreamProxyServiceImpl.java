@@ -46,9 +46,11 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 		}
 
 		if (callerOptional.get().equals(Constants.CALLER.PRIMARY)) {
+			logger.info("Sending call to downstream");
 			return performDownstreamCall(requestContext);
 		}
 
+		logger.info("Caller is not primary, call will be served from cache");
 		ResponseEntity responseFromCache = fetchFromCacheWithRetry(requestContext);
 
 		return responseFromCache;
@@ -65,8 +67,8 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 	}
 
 	private Optional<RequestCacheObject> handleRetries(RequestContext requestContext) {
-		Optional<RequestCacheObject> requestCacheObject = requestCacheService
-			.fetch(requestContext.getIdempotencyKey(), requestContext.getTraceId());
+		Optional<RequestCacheObject> requestCacheObject = requestCacheService.fetch(requestContext.getTraceId(),
+				requestContext.getIdempotencyKey());
 		long timeElapsed = 0;
 
 		while (requestCacheObject.isEmpty() || Objects.isNull(requestCacheObject.get().getResponse())) {
@@ -78,8 +80,8 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 				Thread.sleep(nonIdempotentWaitRetryInterval);
 				timeElapsed += nonIdempotentWaitRetryInterval;
 
-				requestCacheObject = requestCacheService.fetch(requestContext.getIdempotencyKey(),
-						requestContext.getTraceId());
+				requestCacheObject = requestCacheService.fetch(requestContext.getTraceId(),
+						requestContext.getIdempotencyKey());
 
 			}
 			catch (InterruptedException e) {
