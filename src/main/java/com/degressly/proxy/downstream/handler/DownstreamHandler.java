@@ -10,4 +10,6 @@ public interface DownstreamHandler {
 
 	Optional<String> getTraceId(RequestContext requestContext);
 
+	Optional<String> getIdempotencyKey(RequestContext requestContext);
+
 }

@@ -14,6 +14,7 @@ ARG non_idempotent_wait_retry_interval=100
 ARG primary_hostname
 ARG secondary_hostname
 ARG candidate_hostname
+ARG groovy_downstream_handler=false
 
 
 ENV diff_publisher_bootstrap-servers=${diff_publisher_bootstrap_servers}
@@ -24,6 +25,7 @@ ENV non_idempotent_wait_retry_interval=${non_idempotent_wait_retry_interval}
 ENV primary_hostname=${primary_hostname}
 ENV secondary_hostname=${secondary_hostname}
 ENV candidate_hostname=${candidate_hostname}
+ENV groovy_downstream_handler=${groovy_downstream_handler}
 
 
 COPY . .

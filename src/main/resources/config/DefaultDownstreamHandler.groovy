@@ -22,7 +22,14 @@ class DownstreamHandler implements com.degressly.proxy.downstream.handler.Downst
     Optional<String> getTraceId(RequestContext requestContext) {
 
         JsonSlurper jsonSlurper = new JsonSlurper()
-        def bodyJson = jsonSlurper.parseText(requestContext.getBody())
+        def bodyJson
+
+        try {
+            bodyJson = jsonSlurper.parseText(requestContext.getBody())
+        } catch(Exception ignored) {
+            // Do nothing
+        }
+
         def optional
 
         optional = getField(requestContext.getHeaders(), requestContext.getParams(), bodyJson,"trace-id")
@@ -48,12 +55,21 @@ class DownstreamHandler implements com.degressly.proxy.downstream.handler.Downst
         return Optional.empty()
     }
 
+    @Override
+    Optional<String> getIdempotencyKey(RequestContext requestContext) {
+        if (requestContext.getTraceId()) {
+            return Optional.of(requestContext.getRequest().getRequestURL().append("_").append(requestContext.getTraceId()).toString());
+        }
+
+        return Optional.empty();
+    }
+
     private static Optional<String> getField(MultiValueMap<String, String> headers, MultiValueMap<String, String> params, Object bodyJson, String field) {
         if (headers.containsKey(field))
             return Optional.of(headers.getFirst(field))
         if (params.containsKey(field))
             return Optional.of(params.getFirst(field))
-        if (bodyJson[field] != null && bodyJson[field] instanceof String)
+        if (bodyJson!=null && bodyJson[field] != null && bodyJson[field] instanceof String)
             return Optional.of((String) bodyJson[field])
 
         return Optional.empty()

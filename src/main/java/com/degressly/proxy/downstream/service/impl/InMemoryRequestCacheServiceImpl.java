@@ -92,10 +92,10 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 		RequestCacheObject requestsForCurrentUri;
 		synchronized (this) {
-			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(requestContext.getTraceId());
+			Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(requestContext.getIdempotencyKey());
 			if (Objects.isNull(traceRequestsMap)) {
 				traceRequestsMap = new ConcurrentHashMap<>();
-				cache.put(requestContext.getTraceId(), traceRequestsMap);
+				cache.put(requestContext.getIdempotencyKey(), traceRequestsMap);
 			}
 
 			requestsForCurrentUri = traceRequestsMap.get(requestContext.getRequest().getRequestURL().toString());
@@ -115,8 +115,8 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 	}
 
 	@Override
-	public Optional<RequestCacheObject> fetch(String url, String traceId) {
-		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(traceId);
+	public Optional<RequestCacheObject> fetch(String url, String idempotencyKey) {
+		Map<String, RequestCacheObject> traceRequestsMap = cache.getIfPresent(idempotencyKey);
 
 		if (Objects.isNull(traceRequestsMap)) {
 			return Optional.empty();

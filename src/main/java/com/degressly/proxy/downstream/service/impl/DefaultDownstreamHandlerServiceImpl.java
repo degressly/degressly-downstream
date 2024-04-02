@@ -22,6 +22,11 @@ public class DefaultDownstreamHandlerServiceImpl implements DownstreamHandlerSer
 
 		if (requestContext.getHeaders().containsKey(TRACE_ID)) {
 			requestContext.setTraceId(requestContext.getHeaders().get(TRACE_ID).getFirst());
+			requestContext.setIdempotencyKey(requestContext.getRequest()
+				.getRequestURL()
+				.append("_")
+				.append(requestContext.getTraceId())
+				.toString());
 		}
 		else {
 			throw new UnableToResolveTraceIdException();
