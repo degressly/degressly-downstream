@@ -1,6 +1,7 @@
 package com.degressly.proxy.downstream.controller;
 
 import com.degressly.proxy.downstream.dto.RequestContext;
+import com.degressly.proxy.downstream.service.DownstreamHandlerService;
 import com.degressly.proxy.downstream.service.ProxyCoordinatorService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.MDC;
@@ -18,6 +19,9 @@ public class ProxyController {
 	@Autowired
 	ProxyCoordinatorService proxyCoordinatorService;
 
+	@Autowired
+	DownstreamHandlerService downstreamHandlerService;
+
 	@RequestMapping(value = "/**", method = { RequestMethod.GET, RequestMethod.POST, RequestMethod.HEAD,
 			RequestMethod.OPTIONS, RequestMethod.PUT, RequestMethod.PATCH, RequestMethod.DELETE, RequestMethod.TRACE })
 	public ResponseEntity proxy(final HttpServletRequest request,
@@ -25,15 +29,18 @@ public class ProxyController {
 			final @RequestParam MultiValueMap<String, String> params,
 			final @RequestBody(required = false) String body) {
 
-		if (headers.containsKey(TRACE_ID)) {
-			MDC.put(TRACE_ID, headers.get(TRACE_ID).getFirst());
-		}
-		else {
-			return ResponseEntity.badRequest().build();
-		}
+		var requestContext = RequestContext.builder()
+			.request(request)
+			.body(body)
+			.headers(headers)
+			.params(params)
+			.build();
 
-		return proxyCoordinatorService
-			.fetch(RequestContext.builder().request(request).body(body).headers(headers).params(params).build());
+		downstreamHandlerService.populateIdempotencyDetails(requestContext);
+
+		MDC.put(TRACE_ID, requestContext.getTraceId());
+
+		return proxyCoordinatorService.fetch(requestContext);
 	}
 
 }

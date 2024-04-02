@@ -86,16 +86,19 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		// }
 		// });
 
-		var observation = Observation.builder()
-			.requestUrl(requestUrl)
-			.traceId(traceId)
-			.observationType("REQUEST")
-			.primaryRequest(updatedRequestCacheObject.getPrimaryRequest())
-			.candidateRequest(updatedRequestCacheObject.getCandidateRequest())
-			.secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())
-			.build();
+		observationPublisherExecutorService.submit(() -> {
+			var observation = Observation.builder()
+				.requestUrl(requestUrl)
+				.traceId(traceId)
+				.observationType("REQUEST")
+				.primaryRequest(updatedRequestCacheObject.getPrimaryRequest())
+				.candidateRequest(updatedRequestCacheObject.getCandidateRequest())
+				.secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())
+				.build();
 
-		observationPublisherServices.forEach((service) -> service.publish(observation));
+			observationPublisherServices.forEach((service) -> service.publish(observation));
+		});
+
 	}
 
 }
