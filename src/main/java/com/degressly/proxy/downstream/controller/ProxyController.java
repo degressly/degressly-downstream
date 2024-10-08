@@ -4,6 +4,7 @@ import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.service.DownstreamHandlerService;
 import com.degressly.proxy.downstream.service.ProxyCoordinatorService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import static com.degressly.proxy.downstream.Constants.TRACE_ID;
 
+@Slf4j
 @Controller
 public class ProxyController {
 
@@ -29,6 +31,8 @@ public class ProxyController {
 			final @RequestParam MultiValueMap<String, String> params,
 			final @RequestBody(required = false) String body) {
 
+		log.debug("Request received for: {} | Headers: {} | Params: {} | Body: {}", request.getRequestURI(), headers,
+				params, body);
 		var requestContext = RequestContext.builder()
 			.request(request)
 			.body(body)

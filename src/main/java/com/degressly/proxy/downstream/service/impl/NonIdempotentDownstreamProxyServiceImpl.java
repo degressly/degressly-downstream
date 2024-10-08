@@ -30,6 +30,9 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 	@Value("${non-idempotent.wait.retry-interval}")
 	private long nonIdempotentWaitRetryInterval;
 
+	@Value("${return.response.from:PRIMARY}")
+	private String RETURN_RESPONSE_FROM;
+
 	@Autowired
 	RequestHelper requestHelper;
 
@@ -45,12 +48,12 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 			return ResponseEntity.badRequest().build();
 		}
 
-		if (callerOptional.get().equals(Constants.CALLER.PRIMARY)) {
-			logger.info("Sending call to downstream");
+		if (callerOptional.get().name().equals(RETURN_RESPONSE_FROM)) {
+			logger.info("Sending call to upstream");
 			return performDownstreamCall(requestContext);
 		}
 
-		logger.info("Caller is not primary, call will be served from cache");
+		logger.info("Caller is not same as RETURN_RESPONSE_FROM, call will be served from cache");
 		ResponseEntity responseFromCache = fetchFromCacheWithRetry(requestContext);
 
 		return responseFromCache;

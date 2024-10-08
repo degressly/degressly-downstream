@@ -48,7 +48,7 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		ResponseEntity response = proxyService.fetch(requestContext);
 
 		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, response);
-		logger.info("updatedRequestCacheObject: {}", updatedRequestCacheObject);
+		logger.debug("updatedRequestCacheObject: {}", updatedRequestCacheObject);
 
 		publishObservationIfAllDataIsAvailable(requestContext.getRequest().getRequestURL().toString(),
 				updatedRequestCacheObject);
