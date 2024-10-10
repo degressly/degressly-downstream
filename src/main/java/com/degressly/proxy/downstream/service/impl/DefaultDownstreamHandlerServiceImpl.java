@@ -16,17 +16,19 @@ public class DefaultDownstreamHandlerServiceImpl implements DownstreamHandlerSer
 	@Value("${non-idempotent.proxy.enabled:false}")
 	public String useNonIdemptotentProxy;
 
+	@Value("${degressly.downstream.observation.use.request.uri:false}")
+	private boolean USE_URI_FOR_OBSERVATION;
+
 	@Override
 	public void populateIdempotencyDetails(RequestContext requestContext) {
 		requestContext.setIdempotent(!Boolean.parseBoolean(useNonIdemptotentProxy));
 
+		StringBuilder extractedBase = new StringBuilder(USE_URI_FOR_OBSERVATION
+				? requestContext.getRequest().getRequestURI() : requestContext.getRequest().getRequestURL().toString());
+
 		if (requestContext.getHeaders().containsKey(TRACE_ID)) {
 			requestContext.setTraceId(requestContext.getHeaders().get(TRACE_ID).getFirst());
-			requestContext.setIdempotencyKey(requestContext.getRequest()
-				.getRequestURL()
-				.append("_")
-				.append(requestContext.getTraceId())
-				.toString());
+			requestContext.setIdempotencyKey(extractedBase.append("_").append(requestContext.getTraceId()).toString());
 		}
 		else {
 			throw new UnableToResolveTraceIdException();
