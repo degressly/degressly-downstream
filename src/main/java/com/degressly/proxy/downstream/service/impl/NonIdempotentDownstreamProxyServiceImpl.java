@@ -2,11 +2,14 @@ package com.degressly.proxy.downstream.service.impl;
 
 import com.degressly.proxy.downstream.Constants;
 import com.degressly.proxy.downstream.client.DownstreamClient;
+import com.degressly.proxy.downstream.dto.DownstreamResponse;
 import com.degressly.proxy.downstream.dto.RequestCacheObject;
 import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.helper.RequestHelper;
 import com.degressly.proxy.downstream.service.ProxyService;
 import com.degressly.proxy.downstream.service.RequestCacheService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
@@ -15,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -34,10 +38,12 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 	private String RETURN_RESPONSE_FROM;
 
 	@Autowired
-	RequestHelper requestHelper;
+	private RequestHelper requestHelper;
 
 	@Autowired
-	RequestCacheService requestCacheService;
+	private RequestCacheService requestCacheService;
+
+	private final ObjectMapper objectMapper = new ObjectMapper();
 
 	@Override
 	public ResponseEntity fetch(RequestContext requestContext) {
@@ -55,6 +61,7 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 
 		logger.info("Caller is not same as RETURN_RESPONSE_FROM, call will be served from cache");
 		ResponseEntity responseFromCache = fetchFromCacheWithRetry(requestContext);
+		logger.info("Resp: {}", objectMapper.convertValue(responseFromCache, JsonNode.class).toString());
 
 		return responseFromCache;
 	}
@@ -66,7 +73,11 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 			return ResponseEntity.internalServerError().build();
 		}
 
-		return requestCacheObject.get().getResponse();
+		DownstreamResponse downstreamResponse = requestCacheObject.get().getResponse();
+
+		return new ResponseEntity(downstreamResponse.getBody(),
+				new LinkedMultiValueMap<>(downstreamResponse.getHeaders()), downstreamResponse.getStatusCode());
+
 	}
 
 	private Optional<RequestCacheObject> handleRetries(RequestContext requestContext) {
@@ -108,7 +119,13 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 		ResponseEntity response = DownstreamClient.getResponse(host, request, requestContext.getHeaders(),
 				requestContext.getParams(), requestContext.getBody());
 
-		requestCacheService.storeResponse(requestContext, response);
+		var downstreamResponse = DownstreamResponse.builder()
+			.statusCode(response.getStatusCode().value())
+			.headers(new LinkedMultiValueMap<>(response.getHeaders()))
+			.body(response.getBody() != null ? response.getBody().toString() : null)
+			.build();
+
+		requestCacheService.storeResponse(requestContext, downstreamResponse);
 
 		return response;
 	}

@@ -7,19 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ProxyServiceFactory {
 
 	@Autowired
-	List<ProxyService> proxyServiceList;
+	private List<ProxyService> proxyServiceList;
 
-	@Value("${non-idempotent.proxy.enabled:false}")
-	public String useNonIdemptotentProxy;
+	@Value("${proxy.service.type:IDEMPOTENT_DOWNSTREAM}")
+	public String proxyServiceType;
 
 	private Map<ProxyService.PROXY_SERVICE_TYPE, ProxyService> serviceMap;
 
@@ -31,6 +28,11 @@ public class ProxyServiceFactory {
 	}
 
 	public ProxyService getProxyService(RequestContext requestContext) {
+
+		if (ProxyService.PROXY_SERVICE_TYPE.REPLAY_DOWNSTREAM.name().equals(proxyServiceType)) {
+			return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.REPLAY_DOWNSTREAM);
+		}
+
 		if (requestContext.isIdempotent()) {
 			return serviceMap.get(ProxyService.PROXY_SERVICE_TYPE.IDEMPOTENT_DOWNSTREAM);
 		}

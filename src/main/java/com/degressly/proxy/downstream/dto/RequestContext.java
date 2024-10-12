@@ -29,4 +29,6 @@ public class RequestContext {
 
 	boolean isIdempotent;
 
+	boolean isCachePopulationRequest;
+
 }
