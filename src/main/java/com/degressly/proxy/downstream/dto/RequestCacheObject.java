@@ -12,7 +12,7 @@ public class RequestCacheObject {
 
 	DownstreamRequest candidateRequest;
 
-	ResponseEntity response; // To be used for non-idempotent requests
+	DownstreamResponse response; // To be used for non-idempotent requests
 
 	boolean observationPublished = false;
 

@@ -2,6 +2,7 @@ package com.degressly.proxy.downstream.service.impl;
 
 import com.degressly.proxy.downstream.Constants;
 import com.degressly.proxy.downstream.dto.DownstreamRequest;
+import com.degressly.proxy.downstream.dto.DownstreamResponse;
 import com.degressly.proxy.downstream.dto.RequestCacheObject;
 import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.helper.RequestHelper;
@@ -87,7 +88,7 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 	}
 
 	@Override
-	public RequestCacheObject storeResponse(RequestContext requestContext, ResponseEntity response) {
+	public RequestCacheObject storeResponse(RequestContext requestContext, DownstreamResponse response) {
 		Optional<Constants.CALLER> caller = requestHelper.getCaller(requestContext);
 
 		RequestCacheObject requestsForCurrentUri;
@@ -105,7 +106,8 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 			}
 		}
 
-		if (caller.isEmpty() || !caller.get().equals(Constants.CALLER.PRIMARY)) {
+		if (!requestContext.isCachePopulationRequest()
+				&& (caller.isEmpty() || !caller.get().equals(Constants.CALLER.PRIMARY))) {
 			return requestsForCurrentUri;
 		}
 
