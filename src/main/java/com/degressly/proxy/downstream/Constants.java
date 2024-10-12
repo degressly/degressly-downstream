@@ -6,6 +6,8 @@ public interface Constants {
 
 	String CALLER_ID = "x-degressly-caller";
 
+	String DEGRESSLY_CACHE_POPULATION_REQUEST = "degressly-cache-population-request";
+
 	enum CALLER {
 
 		PRIMARY, SECONDARY, CANDIDATE

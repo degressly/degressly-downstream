@@ -1,5 +1,6 @@
 package com.degressly.proxy.downstream.service.impl;
 
+import com.degressly.proxy.downstream.dto.DownstreamResponse;
 import com.degressly.proxy.downstream.dto.Observation;
 import com.degressly.proxy.downstream.dto.RequestCacheObject;
 import com.degressly.proxy.downstream.dto.RequestContext;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -57,7 +59,14 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		ProxyService proxyService = proxyServiceFactory.getProxyService(requestContext);
 		ResponseEntity response = proxyService.fetch(requestContext);
 
-		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, response);
+		var downstreamResponse = DownstreamResponse.builder()
+			.statusCode(response.getStatusCode().value())
+			.headers(new LinkedMultiValueMap<>(response.getHeaders()))
+			.body(response.getBody() != null ? response.getBody().toString() : null)
+			.build();
+
+		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeResponse(requestContext,
+				downstreamResponse);
 		logger.debug("updatedRequestCacheObject: {}", updatedRequestCacheObject);
 
 		String observationIdentifier = USE_URI_FOR_OBSERVATION ? requestContext.getRequest().getRequestURI()
