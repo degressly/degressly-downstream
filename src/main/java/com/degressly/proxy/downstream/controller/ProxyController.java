@@ -40,7 +40,7 @@ public class ProxyController {
 			final @RequestParam MultiValueMap<String, String> params, final @RequestBody(required = false) String body)
 			throws JsonProcessingException {
 
-		log.debug("Request received for: {} | Headers: {} | Params: {} | Body: {}", request.getRequestURI(), headers,
+		log.info("Request received for: {} | Headers: {} | Params: {} | Body: {}", request.getRequestURI(), headers,
 				params, body);
 		var requestContext = RequestContext.builder()
 			.request(request)
@@ -54,7 +54,8 @@ public class ProxyController {
 		MDC.put(TRACE_ID, requestContext.getTraceId());
 
 		if (isCachePopulationRequest(headers)) {
-			requestCacheService.storeResponse(requestContext, objectMapper.readValue(body, DownstreamResponse.class));
+			var downstreamResponse = objectMapper.readValue(body, DownstreamResponse.class);
+			requestCacheService.storeResponse(requestContext, downstreamResponse);
 			return ResponseEntity.ok().body("Saved with " + requestContext.getIdempotencyKey());
 		}
 
