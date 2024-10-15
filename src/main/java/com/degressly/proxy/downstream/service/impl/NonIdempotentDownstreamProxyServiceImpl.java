@@ -8,10 +8,12 @@ import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.helper.RequestHelper;
 import com.degressly.proxy.downstream.service.ProxyService;
 import com.degressly.proxy.downstream.service.RequestCacheService;
+import com.degressly.proxy.downstream.service.RetryableProxyService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,24 +26,21 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
+public class NonIdempotentDownstreamProxyServiceImpl extends RetryableProxyService implements ProxyService {
 
 	Logger logger = LoggerFactory.getLogger(NonIdempotentDownstreamProxyServiceImpl.class);
-
-	@Value("${non-idempotent.wait.timeout}")
-	private long nonIdempotentWaitTimeout;
-
-	@Value("${non-idempotent.wait.retry-interval}")
-	private long nonIdempotentWaitRetryInterval;
 
 	@Value("${return.response.from:PRIMARY}")
 	private String RETURN_RESPONSE_FROM;
 
-	@Autowired
-	private RequestHelper requestHelper;
+	private final RequestHelper requestHelper;
 
 	@Autowired
-	private RequestCacheService requestCacheService;
+	public NonIdempotentDownstreamProxyServiceImpl(@Autowired final RequestHelper requestHelper,
+			@Autowired final RequestCacheService requestCacheService) {
+		super(requestCacheService);
+		this.requestHelper = requestHelper;
+	}
 
 	private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -64,47 +63,6 @@ public class NonIdempotentDownstreamProxyServiceImpl implements ProxyService {
 		logger.info("Resp: {}", objectMapper.convertValue(responseFromCache, JsonNode.class).toString());
 
 		return responseFromCache;
-	}
-
-	private ResponseEntity fetchFromCacheWithRetry(RequestContext requestContext) {
-		Optional<RequestCacheObject> requestCacheObject = handleRetries(requestContext);
-
-		if (requestCacheObject.isEmpty() || Objects.isNull(requestCacheObject.get().getResponse())) {
-			return ResponseEntity.internalServerError().build();
-		}
-
-		DownstreamResponse downstreamResponse = requestCacheObject.get().getResponse();
-
-		return new ResponseEntity(downstreamResponse.getBody(),
-				new LinkedMultiValueMap<>(downstreamResponse.getHeaders()), downstreamResponse.getStatusCode());
-
-	}
-
-	private Optional<RequestCacheObject> handleRetries(RequestContext requestContext) {
-		Optional<RequestCacheObject> requestCacheObject = requestCacheService.fetch(requestContext.getTraceId(),
-				requestContext.getIdempotencyKey());
-		long timeElapsed = 0;
-
-		while (requestCacheObject.isEmpty() || Objects.isNull(requestCacheObject.get().getResponse())) {
-			if (timeElapsed > nonIdempotentWaitTimeout) {
-				break;
-			}
-
-			try {
-				Thread.sleep(nonIdempotentWaitRetryInterval);
-				timeElapsed += nonIdempotentWaitRetryInterval;
-
-				requestCacheObject = requestCacheService.fetch(requestContext.getTraceId(),
-						requestContext.getIdempotencyKey());
-
-			}
-			catch (InterruptedException e) {
-				// Do nothing
-			}
-
-		}
-
-		return requestCacheObject;
 	}
 
 	private ResponseEntity performDownstreamCall(RequestContext requestContext) {
