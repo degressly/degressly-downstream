@@ -31,16 +31,15 @@ public class DownstreamClient {
 
 		var restTemplate = new RestTemplate();
 		var httpEntity = new HttpEntity<>(body, headers);
-		var queryParams = new HashMap<String, String>();
 
-		var finalUrl = getFinalUrl(host, httpServletRequest, params, queryParams);
+		var finalUrl = getFinalUrl(host, httpServletRequest, params);
 
 		HttpEntity<String> response;
 		MultiValueMap<String, String> newHeaders;
 
 		try {
 			response = restTemplate.exchange(finalUrl, HttpMethod.valueOf(httpServletRequest.getMethod()), httpEntity,
-					String.class, queryParams);
+					String.class, params);
 			newHeaders = filterHeaders(response.getHeaders());
 
 			logger.info("Response for for url {}: Status: {}, Headers: {}, Body: {}", finalUrl, "200",
@@ -74,16 +73,11 @@ public class DownstreamClient {
 	}
 
 	private static String getFinalUrl(String host, HttpServletRequest httpServletRequest,
-			MultiValueMap<String, String> params, Map<String, String> queryParams) {
+			MultiValueMap<String, String> params) {
 		UriComponentsBuilder urlTemplate = UriComponentsBuilder.fromHttpUrl(host + httpServletRequest.getRequestURI());
 
-		for (Map.Entry<String, List<String>> entry : params.entrySet()) {
-			urlTemplate.queryParam(entry.getKey(), new StringBuilder("{" + entry.getKey() + "}"));
-			queryParams.put(entry.getKey(), entry.getValue().getFirst());
-		}
-
 		urlTemplate = urlTemplate.encode();
-		var uriComponents = urlTemplate.buildAndExpand(queryParams);
+		var uriComponents = urlTemplate.buildAndExpand(params);
 		var finalUrl = uriComponents.toString();
 		return finalUrl;
 	}
