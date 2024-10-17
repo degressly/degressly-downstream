@@ -82,10 +82,7 @@ public class DownstreamClient {
 			queryParams.put(entry.getKey(), entry.getValue().getFirst());
 		}
 
-		urlTemplate = urlTemplate.encode();
-		var uriComponents = urlTemplate.buildAndExpand(queryParams);
-		var finalUrl = uriComponents.toString();
-		return finalUrl;
+		return urlTemplate.build().toUriString();
 	}
 
 }
