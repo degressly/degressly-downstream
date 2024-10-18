@@ -52,12 +52,23 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 	@Override
 	public ResponseEntity fetch(RequestContext requestContext) {
 
+		String observationIdentifier = USE_URI_FOR_OBSERVATION ? requestContext.getRequest().getRequestURI()
+				: requestContext.getRequest().getRequestURL().toString();
+
 		// Update caches
-		requestCacheService.storeRequest(requestContext);
+		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeRequest(requestContext);
 
 		// Proxy request to downstream
 		ProxyService proxyService = proxyServiceFactory.getProxyService(requestContext);
-		ResponseEntity response = proxyService.fetch(requestContext);
+		ResponseEntity response;
+		try {
+			response = proxyService.fetch(requestContext);
+		}
+		catch (Exception e) {
+			logger.error("Error when fetching from downstream", e);
+			publishObservation(observationIdentifier, updatedRequestCacheObject);
+			throw e;
+		}
 
 		var downstreamResponse = DownstreamResponse.builder()
 			.statusCode(response.getStatusCode().value())
@@ -65,19 +76,15 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 			.body(response.getBody() != null ? response.getBody().toString() : null)
 			.build();
 
-		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeResponse(requestContext,
-				downstreamResponse);
+		updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, downstreamResponse);
 		logger.debug("updatedRequestCacheObject: {}", updatedRequestCacheObject);
 
-		String observationIdentifier = USE_URI_FOR_OBSERVATION ? requestContext.getRequest().getRequestURI()
-				: requestContext.getRequest().getRequestURL().toString();
-		publishObservationIfAllDataIsAvailable(observationIdentifier, updatedRequestCacheObject);
+		publishObservation(observationIdentifier, updatedRequestCacheObject);
 
 		return response;
 	}
 
-	private void publishObservationIfAllDataIsAvailable(String requestUrl,
-			RequestCacheObject updatedRequestCacheObject) {
+	private void publishObservation(String requestUrl, RequestCacheObject updatedRequestCacheObject) {
 		String traceId = MDC.get(TRACE_ID);
 
 		// synchronized (this) {
