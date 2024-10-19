@@ -7,13 +7,11 @@ import com.degressly.proxy.downstream.dto.RequestCacheObject;
 import com.degressly.proxy.downstream.dto.RequestContext;
 import com.degressly.proxy.downstream.helper.RequestHelper;
 import com.degressly.proxy.downstream.service.RequestCacheService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -21,11 +19,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Service
+@RequiredArgsConstructor
 public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 
 	Logger logger = LoggerFactory.getLogger(InMemoryRequestCacheServiceImpl.class);
@@ -34,12 +31,7 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 		.expireAfterWrite(1, TimeUnit.HOURS)
 		.build();
 
-	private final ExecutorService observationPublisherExecutorService = Executors.newCachedThreadPool();
-
-	private static final ObjectMapper objectMapper = new ObjectMapper();
-
-	@Autowired
-	RequestHelper requestHelper;
+	private final RequestHelper requestHelper;
 
 	@Override
 	public RequestCacheObject storeRequest(RequestContext requestContext) {

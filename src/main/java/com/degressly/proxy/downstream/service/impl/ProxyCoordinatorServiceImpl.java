@@ -9,10 +9,10 @@ import com.degressly.proxy.downstream.service.ProxyCoordinatorService;
 import com.degressly.proxy.downstream.service.ProxyService;
 import com.degressly.proxy.downstream.service.RequestCacheService;
 import com.degressly.proxy.downstream.service.factory.ProxyServiceFactory;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import static com.degressly.proxy.downstream.Constants.TRACE_ID;
 
 @Service
+@RequiredArgsConstructor
 public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 
 	Logger logger = LoggerFactory.getLogger(ProxyCoordinatorServiceImpl.class);
@@ -38,16 +39,13 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 	@Value("${degressly.downstream.observation.use.request.uri:false}")
 	private boolean USE_URI_FOR_OBSERVATION;
 
-	@Autowired
-	ProxyServiceFactory proxyServiceFactory;
+	private final ProxyServiceFactory proxyServiceFactory;
 
-	@Autowired
-	RequestCacheService requestCacheService;
+	private final RequestCacheService requestCacheService;
 
-	@Autowired
-	List<ObservationPublisherService> observationPublisherServices;
+	private final List<ObservationPublisherService> observationPublisherServices;
 
-	ExecutorService observationPublisherExecutorService = Executors.newCachedThreadPool();
+	private final ExecutorService observationPublisherExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
 	@Override
 	public ResponseEntity fetch(RequestContext requestContext) {
@@ -123,7 +121,7 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 				.secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())
 				.build();
 
-			observationPublisherServices.forEach((service) -> service.publish(observation));
+			observationPublisherServices.forEach(service -> service.publish(observation));
 		});
 
 	}
