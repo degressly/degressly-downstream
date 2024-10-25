@@ -12,8 +12,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,24 +24,20 @@ public class KafkaObservationPublisherServiceImpl implements ObservationPublishe
 
 	private static final ObjectMapper objectMapper = new ObjectMapper();
 
-	private static final ExecutorService singleThreadedExecutorService = Executors.newSingleThreadExecutor();
-
 	@Override
 	public void publish(Observation result) {
-		// Execute only one at a time to prevent newer, more complete observations being
-		// overridden
-		singleThreadedExecutorService.submit(() -> {
-			try {
-				Map<String, Object> map = objectMapper.convertValue(result, new TypeReference<>() {
-				});
-				String payload = objectMapper.writeValueAsString(map);
-				logger.info("Sending payload {}", payload);
-				kafkaTemplate.sendMessage(payload);
-			}
-			catch (Exception e) {
-				logger.error("Error parsing object: {}", result, e);
-			}
-		});
+
+		try {
+			Map<String, Object> map = objectMapper.convertValue(result, new TypeReference<>() {
+			});
+			String payload = objectMapper.writeValueAsString(map);
+			logger.info("Sending payload {}", payload);
+			kafkaTemplate.sendMessage(result.getTraceId(), payload);
+		}
+		catch (Exception e) {
+			logger.error("Error parsing object: {}", result, e);
+		}
+
 	}
 
 }

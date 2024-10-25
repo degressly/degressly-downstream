@@ -9,6 +9,7 @@ import com.degressly.proxy.downstream.service.ProxyCoordinatorService;
 import com.degressly.proxy.downstream.service.ProxyService;
 import com.degressly.proxy.downstream.service.RequestCacheService;
 import com.degressly.proxy.downstream.service.factory.ProxyServiceFactory;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -47,6 +48,18 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 
 	private final ExecutorService observationPublisherExecutorService = Executors.newVirtualThreadPerTaskExecutor();
 
+	private Map<ObservationPublisherService, ExecutorService> publisherWiseExecutors;
+
+	@PostConstruct
+	public void init() {
+		var tempMap = new HashMap<ObservationPublisherService, ExecutorService>();
+		// Although messages may be sent to multiple publishers at the same time, each
+		// publisher should only deal with one message at a time in sequential order
+		// to prevent race conditions.
+		observationPublisherServices.forEach(service -> tempMap.put(service, Executors.newSingleThreadExecutor()));
+		publisherWiseExecutors = Collections.unmodifiableMap(tempMap);
+	}
+
 	@Override
 	public ResponseEntity fetch(RequestContext requestContext) {
 
@@ -60,18 +73,12 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		// Proxy request to downstream
 		ProxyService proxyService = proxyServiceFactory.getProxyService(requestContext);
 		ResponseEntity response;
-		try {
-			response = proxyService.fetch(requestContext);
-		}
-		catch (Exception e) {
-			logger.error("Error when fetching from downstream", e);
-			throw e;
-		}
+		response = proxyService.fetch(requestContext);
 
 		var downstreamResponse = DownstreamResponse.builder()
 			.statusCode(response.getStatusCode().value())
 			.headers(new LinkedMultiValueMap<>(response.getHeaders()))
-			.body(response.getBody() != null ? response.getBody().toString() : null)
+			.body(response.getBody() != null ? Objects.requireNonNull(response.getBody()).toString() : null)
 			.build();
 
 		updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, downstreamResponse);
@@ -83,32 +90,6 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 	private void publishObservation(String requestUrl, RequestCacheObject updatedRequestCacheObject) {
 		String traceId = MDC.get(TRACE_ID);
 
-		// synchronized (this) {
-		// if (updatedRequestCacheObject.isObservationPublished()) {
-		// return;
-		// }
-		// updatedRequestCacheObject.setObservationPublished(true);
-		// }
-		//
-		// observationPublisherExecutorService.submit(() -> {
-		// if (Objects.nonNull(updatedRequestCacheObject.getPrimaryRequest())
-		// && Objects.nonNull(updatedRequestCacheObject.getSecondaryRequest())
-		// && Objects.nonNull(updatedRequestCacheObject.getCandidateRequest())) {
-		//
-		// var observation = Observation.builder()
-		// .requestUrl(requestUrl)
-		// .traceId(traceId)
-		// .observationType("REQUEST")
-		// .primaryRequest(updatedRequestCacheObject.getPrimaryRequest())
-		// .candidateRequest(updatedRequestCacheObject.getCandidateRequest())
-		// .secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())
-		// .build();
-		//
-		// observationPublisherServices.forEach((service) ->
-		// service.publish(observation));
-		// }
-		// });
-
 		observationPublisherExecutorService.submit(() -> {
 			var observation = Observation.builder()
 				.requestUrl(requestUrl)
@@ -119,7 +100,13 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 				.secondaryRequest(updatedRequestCacheObject.getSecondaryRequest())
 				.build();
 
-			observationPublisherServices.forEach(service -> service.publish(observation));
+			/*
+			 * see comment in
+			 * com.degressly.proxy.downstream.service.impl.ProxyCoordinatorServiceImpl.
+			 * init
+			 */
+			observationPublisherServices
+				.forEach(service -> publisherWiseExecutors.get(service).submit(() -> service.publish(observation)));
 		});
 
 	}
