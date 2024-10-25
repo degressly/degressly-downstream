@@ -55,6 +55,7 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 
 		// Update caches
 		RequestCacheObject updatedRequestCacheObject = requestCacheService.storeRequest(requestContext);
+		publishObservation(observationIdentifier, updatedRequestCacheObject);
 
 		// Proxy request to downstream
 		ProxyService proxyService = proxyServiceFactory.getProxyService(requestContext);
@@ -64,7 +65,6 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		}
 		catch (Exception e) {
 			logger.error("Error when fetching from downstream", e);
-			publishObservation(observationIdentifier, updatedRequestCacheObject);
 			throw e;
 		}
 
@@ -76,8 +76,6 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 
 		updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, downstreamResponse);
 		logger.debug("updatedRequestCacheObject: {}", updatedRequestCacheObject);
-
-		publishObservation(observationIdentifier, updatedRequestCacheObject);
 
 		return response;
 	}
