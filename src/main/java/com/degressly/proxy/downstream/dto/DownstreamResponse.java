@@ -18,7 +18,7 @@ public class DownstreamResponse {
 
 	private int statusCode;
 
-	private String body;
+	private Object body;
 
 	// Headers are modeled as a LinkedMultiValueMap to handle the list of strings
 	private Map<String, List<String>> headers;

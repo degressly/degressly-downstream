@@ -78,7 +78,7 @@ public class ProxyCoordinatorServiceImpl implements ProxyCoordinatorService {
 		var downstreamResponse = DownstreamResponse.builder()
 			.statusCode(response.getStatusCode().value())
 			.headers(new LinkedMultiValueMap<>(response.getHeaders()))
-			.body(response.getBody() != null ? Objects.requireNonNull(response.getBody()).toString() : null)
+			.body(response.getBody() != null ? response.getBody() : null)
 			.build();
 
 		updatedRequestCacheObject = requestCacheService.storeResponse(requestContext, downstreamResponse);
