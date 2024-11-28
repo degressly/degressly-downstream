@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 
@@ -73,6 +74,10 @@ public class RetryableProxyService {
 	private static MultiValueMap<String, String> getHeaders(DownstreamResponse downstreamResponse) {
 
 		MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
+
+		if (CollectionUtils.isEmpty(downstreamResponse.getHeaders())) {
+			return headers;
+		}
 
 		downstreamResponse.getHeaders().forEach((k, v) -> {
 			if (!HEADERS_TO_SKIP.contains(k)) {
