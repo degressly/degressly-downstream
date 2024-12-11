@@ -58,7 +58,8 @@ public class InMemoryRequestCacheServiceImpl implements RequestCacheService {
 		}
 
 		var downstreamRequest = DownstreamRequest.builder()
-			.headers(new HashMap<>(requestContext.getHeaders()))
+			.headers(Objects.nonNull(requestContext.getHeaders()) ? new HashMap<>(requestContext.getHeaders())
+					: new HashMap<>())
 			.params(requestContext.getParams())
 			.body(requestContext.getBody())
 			.build();

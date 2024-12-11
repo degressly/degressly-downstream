@@ -1,5 +1,6 @@
 package com.degressly.proxy.downstream.dto;
 
+import com.degressly.proxy.downstream.Constants;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -19,6 +20,8 @@ public class RequestContext {
 	MultiValueMap<String, String> headers;
 
 	MultiValueMap<String, String> params;
+
+	Constants.CALLER callerName = null;
 
 	@Nullable
 	String body;
