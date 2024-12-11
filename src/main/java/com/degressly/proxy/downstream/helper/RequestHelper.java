@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -38,6 +39,11 @@ public class RequestHelper {
 	}
 
 	public Optional<Constants.CALLER> getCaller(RequestContext requestContext) {
+
+		if (Objects.nonNull(requestContext.getCallerName())) {
+			return Optional.of(requestContext.getCallerName());
+		}
+
 		// First priority is given to hostname match, then to headers
 
 		if (!CollectionUtils.isEmpty(hostnameMap)) {
