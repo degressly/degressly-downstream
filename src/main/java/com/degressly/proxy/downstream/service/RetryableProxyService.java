@@ -18,7 +18,7 @@ import static com.degressly.proxy.downstream.Constants.HEADERS_TO_SKIP;
 
 @Slf4j
 @RequiredArgsConstructor
-public class RetryableProxyService {
+abstract public class RetryableProxyService {
 
 	protected final RequestCacheService requestCacheService;
 
