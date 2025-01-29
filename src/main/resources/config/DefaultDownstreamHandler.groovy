@@ -37,19 +37,7 @@ class DownstreamHandler implements com.degressly.proxy.downstream.handler.Downst
         if (optional.isPresent())
             return Optional.of(optional.get())
 
-        optional = getField(requestContext.getHeaders(), requestContext.getParams(), bodyJson,"seqNo")
-        if (optional.isPresent())
-            return Optional.of(optional.get())
-
-        optional = getField(requestContext.getHeaders(), requestContext.getParams(), bodyJson,"seq-no")
-        if (optional.isPresent())
-            return Optional.of((optional.get()))
-
-        optional = getField(requestContext.getHeaders(), requestContext.getParams(), bodyJson,"txn-id")
-        if (optional.isPresent())
-            return Optional.of((optional.get()))
-
-        optional = getField(requestContext.getHeaders(), requestContext.getParams(), bodyJson,"txnId")
+        optional = getField(requestContext.getHeaders(), requestContext.getParams(), bodyJson,"correlation-id")
         if (optional.isPresent())
             return Optional.of(optional.get())
 
