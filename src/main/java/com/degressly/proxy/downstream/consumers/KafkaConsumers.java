@@ -50,16 +50,18 @@ public class KafkaConsumers {
 	}
 
 	private void processMessage(ConsumerRecord<String, String> record, Constants.CALLER callerName) {
-		try {
-			log.info(record.key());
-			log.info(record.topic());
-			log.info(record.value());
-			RequestContext requestContext = getRequestContext(record, callerName);
-			RequestCacheObject updatedRequestCacheObject = requestCacheService.storeRequest(requestContext);
-			observationPublisherHelper.publishObservation(record.topic(), updatedRequestCacheObject, "KAFKA");
-		}
-		catch (Exception e) {
-			log.error("Exception while processing kafka message", e);
+		synchronized (this) {
+			try {
+				log.info(record.key());
+				log.info(record.topic());
+				log.info(record.value());
+				RequestContext requestContext = getRequestContext(record, callerName);
+				RequestCacheObject updatedRequestCacheObject = requestCacheService.storeRequest(requestContext);
+				observationPublisherHelper.publishObservation(record.topic(), updatedRequestCacheObject, "KAFKA");
+			}
+			catch (Exception e) {
+				log.error("Exception while processing kafka message", e);
+			}
 		}
 	}
 
