@@ -24,7 +24,8 @@ public class DownstreamClient {
 	private static final Set<String> headersToSkip = Set.of("Accept-Encoding", "accept-encoding", "connection",
 			"accept", "Accept", "Connection", "content-length", "Content-Length", "transfer-encoding", "host", "Host",
 			"Transfer-Encoding", "Keep-Alive", "keep-alive", "Trailer", "trailer", "Upgrade", "upgrade",
-			"Proxy-Authorization", "proxy-authorization", "Proxy-Authenticate", "proxy-authenticate");
+			"Proxy-Authorization", "proxy-authorization", "Proxy-Authenticate", "proxy-authenticate",
+			"Content-Encoding", "content-encoding");
 
 	public static ResponseEntity getResponse(String host, HttpServletRequest httpServletRequest,
 			MultiValueMap<String, String> headers, MultiValueMap<String, String> params, String body) {
